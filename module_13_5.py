@@ -3,7 +3,7 @@ from aiogram.filters import Command
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 import asyncio
 
 API_TOKEN = '7787493433:AAGBdEiUhUvCcydfXXxFbbS_F_T_Ca5Tfbk'
@@ -24,14 +24,29 @@ keyboard = ReplyKeyboardMarkup(
     resize_keyboard=True
 )
 
+inline_keyboard = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text="Рассчитать норму калорий", callback_data="calories")],
+        [InlineKeyboardButton(text="Формулы расчёта", callback_data="formulas")]
+    ]
+)
+
 @dp.message(Command("start"))
 async def start_command(message: types.Message):
     await message.answer("Добро пожаловать! Выберите действие:", reply_markup=keyboard)
 
 @dp.message(lambda message: message.text == "Рассчитать")
-async def set_age(message: types.Message, state: FSMContext):
-    await message.answer("Введите свой возраст:")
+async def main_menu(message: types.Message):
+    await message.answer("Выберите опцию:", reply_markup=inline_keyboard)
+
+@dp.callback_query(lambda call: call.data == "calories")
+async def set_age(call: types.CallbackQuery, state: FSMContext):
+    await call.message.answer("Введите свой возраст:")
     await state.set_state(UserState.age)
+
+@dp.callback_query(lambda call: call.data == "formulas")
+async def get_formulas(call: types.CallbackQuery):
+    await call.message.answer("Формула Миффлина-Сан Жеора:\nBMR = 10 * вес + 6.25 * рост - 5 * возраст - 161")
 
 @dp.message(UserState.age)
 async def set_growth(message: types.Message, state: FSMContext):
